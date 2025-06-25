@@ -1,7 +1,7 @@
 # 对话助手 (Chat Assistant)
 低智力，答非所问版本。
 <p align="center">
-  <img src="static/assistant_avatar.png" alt="甄嬛对话助手" width="200">
+  <img src="test1.png" alt="甄嬛对话助手" width="200">
 </p>
 
 ## 项目简介
