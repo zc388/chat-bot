@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对话test</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>对话test</h1>
+            <p>数据为甄嬛的台词</p>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages">
+            <div class="message system">
+                <div class="avatar system-avatar"></div>
+                <div class="message-content">
+                    <p>妾身甄嬛，今日有幸与您相谈，不知您有何事相询？</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-input">
+            <textarea id="user-input" placeholder="请输入您的问题..." rows="2"></textarea>
+            <button id="send-btn">发送</button>
+        </div>
+    </div>
+    
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        let chatHistory = [];
+        
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            
+            // 添加用户消息到界面 (右侧)
+            addMessage('user', message);
+            userInput.value = '';
+            
+            // 显示加载状态 (左侧)
+            const loadingDiv = addMessage('assistant', '<div class="loading-dots"><div></div><div></div><div></div></div>');
+            
+            // 发送请求到后端
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    history: chatHistory
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // 移除加载状态
+                loadingDiv.remove();
+                
+                // 添加助手回复 (左侧)
+                addMessage('assistant', data.response);
+                
+                // 更新历史
+                chatHistory = data.history;
+            })
+            .catch(error => {
+                loadingDiv.remove();
+                addMessage('system', '哀家与您的对话被打断了，请稍后再试。');
+                console.error('Error:', error);
+            });
+        }
+        
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = `avatar ${role}-avatar`;
+            messageDiv.appendChild(avatar);
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.innerHTML = `<p>${content}</p>`;
+            messageDiv.appendChild(messageContent);
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            return messageDiv;
+        }
+    </script>
+</body>
+</html>
